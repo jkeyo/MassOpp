@@ -1,3 +1,5 @@
+import Calendar from "./components/Calendar";
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-white text-black">
@@ -22,10 +24,9 @@ export default function Home() {
           Central Massachusetts • Find an event and sign up fast.
         </p>
 
-        <section className="mt-6 rounded-xl border p-6">
-          <div className="text-sm text-gray-600">Calendar placeholder</div>
-          <div className="mt-4 h-[520px] rounded-lg bg-gray-50" />
-        </section>
+       <div className="mt-6">
+        <Calendar />
+      </div>
       </main>
     </div>
   );
