@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { EventClickArg } from "@fullcalendar/core";
+import { createClient } from "@/utils/supabase/client";
 
 
 type HHEvent = {
@@ -15,34 +16,49 @@ type HHEvent = {
   location: string;
   orgName: string;
   description?: string;
+  signupUrl?: string;
+  orgWebsite?: string;
+  orgEmail?: string;
 };
 
+const supabase = createClient();
+
 export default function Calendar() {
-  const events = useMemo<HHEvent[]>(
-  () => [
-    {
-      id: "1",
-      title: "Food Pantry Sort & Pack",
-      start: "2026-01-18T14:00:00",
-      end: "2026-01-18T16:00:00",
-      location: "Worcester, MA",
-      orgName: "Community Pantry Network",
-      description: "Help sort donations and pack bags for distribution.",
-    },
-    {
-      id: "2",
-      title: "Park Cleanup",
-      start: "2026-01-24T10:00:00",
-      end: "2026-01-24T12:00:00",
-      location: "Shrewsbury, MA",
-      orgName: "Green Streets",
-      description: "Gloves + bags provided. Dress warm.",
-    },
-  ],
-  []
-);
+  const [events, setEvents] = useState<HHEvent[]>([]);
 
   const [selected, setSelected] = useState<HHEvent | null>(null);
+
+  useEffect(() => {
+  async function fetchOpportunities() {
+    const { data, error } = await supabase
+      .from("opportunities")
+      .select("*, organizations(name, website_url, contact_email)");
+
+    if (error) {
+      console.error("Error fetching opportunities:", error);
+      return;
+    }
+
+    if (data) {
+      const mapped: HHEvent[] = data.map((row) => ({
+        id: row.id,
+        title: row.title,
+        start: row.start_time,
+        end: row.end_time ?? undefined,
+        location: row.location ?? "Location TBD",
+        orgName: row.organizations?.name ?? "Unknown organization",
+        description: row.description ?? undefined,
+        signupUrl: row.signup_url ?? undefined,
+        orgWebsite: row.organizations?.website_url ?? undefined,
+        orgEmail: row.organizations?.contact_email ?? undefined,
+      }));
+
+      setEvents(mapped);
+    }
+  }
+
+  fetchOpportunities();
+}, []);
 
   useEffect(() => {
         function onKeyDown(e: KeyboardEvent) {
@@ -62,7 +78,6 @@ export default function Calendar() {
       <FullCalendar
         plugins={[dayGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
-        initialDate="2026-01-01"
         height="auto"
         events={events}
         eventClick={onEventClick}
@@ -131,12 +146,42 @@ export default function Calendar() {
                 </div>
 
                 <div className="mt-6 flex gap-3">
-                    <button className="flex-1 rounded-md bg-black px-4 py-2 text-sm text-white hover:opacity-90">
-                    Sign up (coming soon)
+                  {selected.signupUrl ? (
+                      <a
+                      href={selected.signupUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 rounded-md bg-black px-4 py-2 text-center text-sm text-white hover:opacity-90"
+                    >
+                      Sign Up
+                    </a>
+                  ) : selected.orgWebsite ? (
+                      <a
+                      href={selected.orgWebsite}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 rounded-md bg-black px-4 py-2 text-center text-sm text-white hover:opacity-90"
+                    >
+                      Visit Organization
+                    </a>
+                  ) : selected.orgEmail ? (
+                      <a
+                      href={`mailto:${selected.orgEmail}`}
+                      className="flex-1 rounded-md bg-black px-4 py-2 text-center text-sm text-white hover:opacity-90"
+                    >
+                      Email to Sign Up
+                    </a>
+                  ) : (
+                    <button
+                      disabled
+                      className="flex-1 cursor-not-allowed rounded-md bg-gray-300 px-4 py-2 text-sm text-white"
+                    >
+                      Sign up info coming soon
                     </button>
-                    <button className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50">
+                  )}
+                  <button className="rounded-md border px-4 py-2 text-sm hover:bg-gray-50">
                     Share
-                    </button>
+                  </button>
                 </div>
                 </div>
             </div>
