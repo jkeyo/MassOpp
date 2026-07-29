@@ -1,4 +1,5 @@
 import Calendar from "./components/Calendar";
+import AuthStatus from "./components/AuthStatus";
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
             <button className="rounded-md bg-black px-3 py-1.5 text-sm text-white hover:opacity-90">
               Post an Event
             </button>
+            <AuthStatus />
           </nav>
         </div>
       </header>
@@ -24,9 +26,9 @@ export default function Home() {
           Central Massachusetts • Find an event and sign up fast.
         </p>
 
-       <div className="mt-6">
-        <Calendar />
-      </div>
+        <div className="mt-6">
+          <Calendar />
+        </div>
       </main>
     </div>
   );
